@@ -12,8 +12,8 @@ namespace Reversi
 {
     public partial class Spel : Form
     {
-        const int x = 6;
-        const int y = 6;
+        const int x = 5;
+        const int y = 9;
         int[,] board = new int[x,y];
 
         public Spel()
@@ -39,13 +39,16 @@ namespace Reversi
 
         private void paintBoard(object sender, PaintEventArgs pea)
         {
+            int d = 50;
             Graphics g = pea.Graphics;
 
             for (int i = 0; i <= x; i++)
             {
-                int d = 50;
-
                 g.DrawLine(Pens.Black, i * 50 + d, d, i * 50 + d, y * 50 + d);
+            }
+
+            for (int i = 0; i <= y; i++)
+            {
                 g.DrawLine(Pens.Black, 50, i * 50 + d, x * 50 + d, i * 50 + d);
             }
         }
