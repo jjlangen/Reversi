@@ -12,15 +12,17 @@ namespace Reversi
 {
     public partial class Spel : Form
     {
-        const int x = 5;
-        const int y = 9;
+        const int x = 6;
+        const int y = 6;
+        const int d = 60;
+
         int[,] board = new int[x,y];
 
         public Spel()
         {
             InitializeComponent();
 
-            this.ClientSize = new Size(x * 50 + 100, y * 50 + 100);
+            this.ClientSize = new Size(x * d + 2 * d, y * d + 2 * d);
             this.Paint += paintBoard;
 
             newGame();
@@ -39,17 +41,16 @@ namespace Reversi
 
         private void paintBoard(object sender, PaintEventArgs pea)
         {
-            int d = 50;
             Graphics g = pea.Graphics;
 
             for (int i = 0; i <= x; i++)
             {
-                g.DrawLine(Pens.Black, i * 50 + d, d, i * 50 + d, y * 50 + d);
+                g.DrawLine(Pens.Black, i * d + d, d, i * d + d, y * d + d);
             }
 
             for (int i = 0; i <= y; i++)
             {
-                g.DrawLine(Pens.Black, 50, i * 50 + d, x * 50 + d, i * 50 + d);
+                g.DrawLine(Pens.Black, d, i * d + d, x * d + d, i * d + d);
             }
         }
  
