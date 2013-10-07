@@ -21,15 +21,33 @@ namespace Reversi
             InitializeComponent();
 
             this.ClientSize = new Size(x * 50 + 100, y * 50 + 50);
+            this.Paint += paintBoard;
 
+            newGame();
+        }
+
+        private void newGame()
+        {
             int centerX = x / 2;
             int centerY = y / 2;
 
             board[centerX, centerY] = 1;
             board[centerX, centerY + 1] = 2;
             board[centerX + 1, centerY] = 2;
-            board[centerX + 1, centerY + 1] = 1;            
+            board[centerX + 1, centerY + 1] = 1;
         }
+
+        private void paintBoard(object sender, PaintEventArgs pea)
+        {
+            Graphics g = pea.Graphics;
+
+            for (int i = 0; i <= x; i++)
+            {
+                g.DrawLine(Pens.Black, i * 50 + 50, 50, i * 50 + 50, y * 50 + 50);
+                g.DrawLine(Pens.Black, 50, i * 50 + 50, x * 50 + 50, i * 50 + 50);
+            }
+        }
+ 
 
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
         {
