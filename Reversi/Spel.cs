@@ -43,8 +43,10 @@ namespace Reversi
 
             for (int i = 0; i <= x; i++)
             {
-                g.DrawLine(Pens.Black, i * 50 + 50, 50, i * 50 + 50, y * 50 + 50);
-                g.DrawLine(Pens.Black, 50, i * 50 + 50, x * 50 + 50, i * 50 + 50);
+                int d = 50;
+
+                g.DrawLine(Pens.Black, i * 50 + d, d, i * 50 + d, y * 50 + d);
+                g.DrawLine(Pens.Black, 50, i * 50 + d, x * 50 + d, i * 50 + d);
             }
         }
  
