@@ -1,26 +1,30 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace Reversi
 {
-    public partial class Spel : Form
+    public enum Status
+    {
+        welcome,
+        newgame,
+        turnblue,
+        turnred,
+        winblue,
+        winred
+    }
+
+    public partial class Game : Form
     {
         const int x = 6;
         const int y = 6;
         const int d = 50;
-
+        int currentPlayer;
+        Status state;
         int[,] board;
 
-        int currentPlayer;
-
-        public Spel()
+        public Game()
         {
             InitializeComponent();
 
@@ -29,15 +33,15 @@ namespace Reversi
             this.MouseClick += addPiece;
 
             newGame();
+            state = Status.welcome;
         }
 
         private void newGame()
         {
-            board = null;
-            board = new int[x, y];
-
             int centerX = x / 2;
             int centerY = y / 2;
+
+            board = new int[x, y];
 
             board[centerX - 1, centerY - 1] = 1;
             board[centerX - 1, centerY] = 2;
@@ -45,12 +49,14 @@ namespace Reversi
             board[centerX, centerY - 1] = 2;
 
             currentPlayer = 1;
+            state = Status.newgame;
         }
 
         private void paintBoard(object sender, PaintEventArgs pea)
         {
             Graphics g = pea.Graphics;
-            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            int circleSize = d - 2;
+            g.SmoothingMode = SmoothingMode.AntiAlias;
 
             // Draw lines
             for (int i = 0; i <= x; i++)
@@ -65,15 +71,17 @@ namespace Reversi
                 for (int j = 0; j < y; j++)
                 {
                     if (board[i, j] != 0)
-                        g.FillEllipse(board[i, j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d, j * d + d, d, d);
+                        g.FillEllipse(board[i, j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
                 }
             }
 
             // Draw score
+            Rectangle rect1, rect2;
+
             Font font = new Font(FontFamily.GenericSansSerif, 12, FontStyle.Bold);
 
-            Rectangle rect1 = new Rectangle(d, y * d + 2 * d, d, d);
-            Rectangle rect2 = new Rectangle(x * d, y * d + 2 * d, d, d);
+            rect1 = new Rectangle(d, y * d + 2 * d, circleSize, circleSize);
+            rect2 = new Rectangle(x * d, y * d + 2 * d, circleSize, circleSize);
 
             StringFormat stringFormat = new StringFormat();
             stringFormat.Alignment = StringAlignment.Center;
@@ -86,6 +94,25 @@ namespace Reversi
 
             Pen pen = new Pen(Brushes.Yellow, 5);
             g.DrawEllipse(pen, currentPlayer == 1 ? rect1 : rect2);
+
+            // Draw game state
+            string reportState = "";
+            Rectangle rect3 = new Rectangle(d, y * d + 2 * d, x * d, d);
+
+            if(state == Status.welcome)
+                reportState = "Let's play reversi!";
+            else if (state == Status.newgame)
+                reportState = "Started a new game";
+            else if (state == Status.turnblue)
+                reportState = "Blue's turn";
+            else if (state == Status.turnred)
+                reportState = "Red's turn";
+            else if (state == Status.winblue)
+                reportState = "Blue has won the game!";
+            else if (state == Status.winred)
+                reportState = "Red has won the game!";
+
+            g.DrawString(reportState, font, Brushes.Black, rect3, stringFormat);
         }
 
         private void addPiece(object sender, MouseEventArgs mea)
@@ -93,15 +120,26 @@ namespace Reversi
             int coordX = (int)Math.Floor((double)(mea.X - d) / d);
             int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
 
-            if (validLocation(coordX, coordY))
+            if (isValidLocation(coordX, coordY))
             {
                 board[coordX, coordY] = currentPlayer;
-                currentPlayer = (currentPlayer == 1) ? 2 : 1;
+
+                if (currentPlayer == 1)
+                {
+                    currentPlayer = 2;
+                    state = Status.turnblue;
+                }
+                else if (currentPlayer == 2)
+                {
+                    currentPlayer = 1;
+                    state = Status.turnred;
+                }
+
                 this.Invalidate();
             }
         }
 
-        private bool validLocation(int coordX, int coordY)
+        private bool isValidLocation(int coordX, int coordY)
         {
             if (coordX < 0 || coordX >= x || coordY < 0 || coordY >= y)
             {
@@ -115,7 +153,6 @@ namespace Reversi
 
             return true;
         }
-
 
         private int calculateScore(int player)
         {
@@ -138,7 +175,5 @@ namespace Reversi
         {
 
         }
-
-
     }
 }

@@ -1,6 +1,6 @@
 ﻿namespace Reversi
 {
-    partial class Spel
+    partial class Game
     {
         /// <summary>
         /// Required designer variable.
@@ -28,7 +28,7 @@
         /// </summary>
         private void InitializeComponent()
         {
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Spel));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Game));
             this.toolStripDropDownButton1 = new System.Windows.Forms.ToolStripDropDownButton();
             this.newGameToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.afsluitenToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -48,7 +48,6 @@
             this.toolStripDropDownButton1.Name = "toolStripDropDownButton1";
             this.toolStripDropDownButton1.Size = new System.Drawing.Size(44, 19);
             this.toolStripDropDownButton1.Text = "Start";
-
             // 
             // newGameToolStripMenuItem
             // 
@@ -85,13 +84,14 @@
             this.toolStrip1.TabIndex = 1;
             this.toolStrip1.Text = "toolStrip1";
             // 
-            // Spel
+            // Game
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(475, 429);
             this.Controls.Add(this.toolStrip1);
-            this.Name = "Spel";
+            this.ImeMode = System.Windows.Forms.ImeMode.On;
+            this.Name = "Game";
             this.Text = "Reversi";
             this.toolStrip1.ResumeLayout(false);
             this.toolStrip1.PerformLayout();
