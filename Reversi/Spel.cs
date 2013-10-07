@@ -22,17 +22,28 @@ namespace Reversi
         {
             InitializeComponent();
 
-            this.ClientSize = new Size(x * d + 2 * d, y * d + 2 * d);
+            this.ClientSize = new Size(x * d + 2 * d, y * d + 3 * d);
             this.Paint += paintBoard;
             this.Paint += paintPieces;
+            this.Paint += paintScore;
 
             newGame();
         }
+
+
 
         private void newGame()
         {
             int centerX = x / 2;
             int centerY = y / 2;
+
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    board[i, j] = 0;
+                }
+            }
 
             board[centerX, centerY] = 1;
             board[centerX, centerY - 1] = 2;
@@ -44,19 +55,13 @@ namespace Reversi
         {
             Graphics g = pea.Graphics;
 
-            g.FillRectangle(Brushes.White, d, d, x * d, y * d);
+            g.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
             for (int i = 0; i <= x; i++)
-            {
                 g.DrawLine(Pens.Black, i * d + d, d, i * d + d, y * d + d);
-            }
 
             for (int i = 0; i <= y; i++)
-            {
-                g.DrawLine(Pens.Black, d, i * d + d, x * d + d, i * d + d);
-            }
-
-            
+                g.DrawLine(Pens.Black, d, i * d + d, x * d + d, i * d + d);           
         }
 
         private void paintPieces(object sender, PaintEventArgs pea)
@@ -65,43 +70,62 @@ namespace Reversi
             {
                 for (int j = 0; j < y; j++)
                 {
-                    paintPiece(i, j, board[i, j], pea.Graphics);
+                    if(board[i, j] != 0)
+                        paintPiece(i, j, board[i, j], pea.Graphics);
                 }
             }
         }
 
         private void paintPiece(int col, int row, int player, Graphics g)
         {
-            Brush pieceColor;
+            Brush pieceColor = Brushes.White;
             Rectangle field;
             int fieldX, fieldY;
 
             if (player == 1)
                 pieceColor = Brushes.Blue;
-            else if (player == 2)
+            if (player == 2)
                 pieceColor = Brushes.Red;
-            else
-                pieceColor = Brushes.White;
 
             fieldX = col * d + d;
             fieldY = row * d + d;
-            field = new Rectangle(fieldX, fieldY, d, d);
+            field = new Rectangle(fieldX + 1, fieldY + 1, d - 2, d - 2);
 
             g.FillEllipse(pieceColor, field);
         }
 
+        private void paintScore(object sender, PaintEventArgs pea)
+        {
+            Rectangle pieceRed, pieceBlue;
+            Graphics g = pea.Graphics;
+            int fontSize = 12;
+            Font f = new Font(FontFamily.GenericSansSerif, fontSize, FontStyle.Bold);
+
+            pieceRed = new Rectangle(d, y * d + d + 11, d - 2, d - 2);
+            pieceBlue = new Rectangle((x - 1) * d + d, y * d + d + 11, d - 2, d - 2);
+            
+            g.FillEllipse(Brushes.Red, pieceRed);
+            g.FillEllipse(Brushes.Blue, pieceBlue);
+
+            g.DrawString(calculateScore(1).ToString(), f, Brushes.White, d + d / 2 - 8, y * d + d + 11 + d / 2 - 12);
+            g.DrawString(calculateScore(2).ToString(), f, Brushes.White, (x - 1) * d + d + d / 2 - 8, y * d + d + 11 + d / 2 - 12);
+        }
+
+        private int calculateScore(int player)
+        {
+            int res = 0;
+
+            foreach (int i in board)
+                if (i == player)
+                    res++;
+
+            return res;
+        }
+
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            
-
-
+            newGame();
+            this.Invalidate();
         }
-
-        private void toolStripDropDownButton1_Click(object sender, EventArgs e)
-        {
-
-        }
-
-
     }
 }
