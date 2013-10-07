@@ -24,6 +24,7 @@ namespace Reversi
 
             this.ClientSize = new Size(x * d + 2 * d, y * d + 2 * d);
             this.Paint += paintBoard;
+            this.Paint += paintPieces;
 
             newGame();
         }
@@ -34,14 +35,16 @@ namespace Reversi
             int centerY = y / 2;
 
             board[centerX, centerY] = 1;
-            board[centerX, centerY + 1] = 2;
-            board[centerX + 1, centerY] = 2;
-            board[centerX + 1, centerY + 1] = 1;
+            board[centerX, centerY - 1] = 2;
+            board[centerX - 1, centerY] = 2;
+            board[centerX - 1, centerY - 1] = 1;
         }
 
         private void paintBoard(object sender, PaintEventArgs pea)
         {
             Graphics g = pea.Graphics;
+
+            g.FillRectangle(Brushes.White, d, d, x * d, y * d);
 
             for (int i = 0; i <= x; i++)
             {
@@ -52,8 +55,40 @@ namespace Reversi
             {
                 g.DrawLine(Pens.Black, d, i * d + d, x * d + d, i * d + d);
             }
+
+            
         }
- 
+
+        private void paintPieces(object sender, PaintEventArgs pea)
+        {
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    paintPiece(i, j, board[i, j], pea.Graphics);
+                }
+            }
+        }
+
+        private void paintPiece(int col, int row, int player, Graphics g)
+        {
+            Brush pieceColor;
+            Rectangle field;
+            int fieldX, fieldY;
+
+            if (player == 1)
+                pieceColor = Brushes.Blue;
+            else if (player == 2)
+                pieceColor = Brushes.Red;
+            else
+                pieceColor = Brushes.White;
+
+            fieldX = col * d + d;
+            fieldY = row * d + d;
+            field = new Rectangle(fieldX, fieldY, d, d);
+
+            g.FillEllipse(pieceColor, field);
+        }
 
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
         {
