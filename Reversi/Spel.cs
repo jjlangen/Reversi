@@ -28,7 +28,7 @@ namespace Reversi
             board[centerX, centerY] = 1;
             board[centerX, centerY + 1] = 2;
             board[centerX + 1, centerY] = 2;
-            board[centerX + 1, centerY + 1] = 2;            
+            board[centerX + 1, centerY + 1] = 1;            
         }
 
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
