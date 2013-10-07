@@ -20,7 +20,7 @@ namespace Reversi
         {
             InitializeComponent();
 
-            this.ClientSize = new Size(x * 50 + 100, y * 50 + 50);
+            this.ClientSize = new Size(x * 50 + 100, y * 50 + 100);
             this.Paint += paintBoard;
 
             newGame();
