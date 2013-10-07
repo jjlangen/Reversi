@@ -14,7 +14,7 @@ namespace Reversi
     {
         const int x = 6;
         const int y = 6;
-        const int d = 60;
+        const int d = 50;
 
         int[,] board = new int[x,y];
 
@@ -52,8 +52,20 @@ namespace Reversi
             {
                 g.DrawLine(Pens.Black, d, i * d + d, x * d + d, i * d + d);
             }
+
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    if (board[i,j] != 0)
+                    {
+                        g.FillEllipse(board[i, j] == 1 ? Brushes.Red : Brushes.Blue, i * d, j * d, d, d);
+                    }
+
+                }
+            }
         }
- 
+
 
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
         {
