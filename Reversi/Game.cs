@@ -26,6 +26,18 @@ namespace Reversi
         int[,] board;
         int[,] validLocations;
 
+        // Define possible operations (directions)
+        int[][] operations = new int[][] {
+            new int[] {0,-1},    // Up
+            new int[] {1,-1},    // Up Right
+            new int[] {1,0},     // Right
+            new int[] {1,1},     // Down Right
+            new int[] {0,1},     // Down
+            new int[] {-1,1},    // Down left
+            new int[] {-1,0},    // Left
+            new int[] {-1,-1},   // Up Left
+        };
+
         public Game()
         {
             InitializeComponent();
@@ -126,9 +138,39 @@ namespace Reversi
             int coordX = (int)Math.Floor((double)(mea.X - d) / d);
             int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
 
+            int opponent = currentPlayer == 1 ? 2 : 1;
+
             if (isWithinBounds(coordX, coordY) && validLocations[coordX, coordY] == 1)
             {
                 board[coordX, coordY] = currentPlayer;
+
+                foreach (int[] operation in operations)
+                {
+                    for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1]; isWithinBounds(localX, localY); i++, localX += operation[0], localY += operation[1])
+                    {
+                        if (i == 0)
+                        {
+                            if (board[localX, localY] != opponent)
+                                break;
+                        }
+                        else
+                        {
+                            if (board[localX, localY] == 0)
+                            {
+                                break;
+                            }
+                            else if (board[localX, localY] == currentPlayer)
+                            {
+                                for (int j = i; j >= 0; j--, localX -= operation[0], localY -= operation[1])
+                                {
+                                    board[localX, localY] = currentPlayer;
+                                }
+
+                                break;
+                            }
+                        }
+                    }
+                }
 
                 if (currentPlayer == 1)
                 {
@@ -170,18 +212,6 @@ namespace Reversi
 
             // Define opponent
             int opponent = currentPlayer == 1 ? 2 : 1;
-
-            // Define possible operations (directions)
-            int[][] operations = new int[][] {
-                new int[] {0,-1},    // Up
-                new int[] {1,-1},    // Up Right
-                new int[] {1,0},     // Right
-                new int[] {1,1},     // Down Right
-                new int[] {0,1},     // Down
-                new int[] {-1,1},    // Down left
-                new int[] {-1,0},    // Left
-                new int[] {-1,-1},   // Up Left
-            };
 
             /* Try all directions for the current location, the first spot we encounter NEEDS to be occupied by the opponent, if we find an empty spot after that => break loop,
              * if we find another spot occupied by opponent => keep digging, if we find a spot occupied by the current player => location is valid */
