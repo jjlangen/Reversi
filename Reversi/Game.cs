@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Linq;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -23,6 +24,7 @@ namespace Reversi
         int currentPlayer;
         Status state;
         int[,] board;
+        int[,] validLocations = new int[x, y];
 
         public Game()
         {
@@ -54,6 +56,8 @@ namespace Reversi
 
         private void paintBoard(object sender, PaintEventArgs pea)
         {
+            int[,] validLocations = getValidLocations();
+
             Graphics g = pea.Graphics;
             int circleSize = d - 2;
             g.SmoothingMode = SmoothingMode.AntiAlias;
@@ -70,15 +74,17 @@ namespace Reversi
             {
                 for (int j = 0; j < y; j++)
                 {
-                    if (board[i, j] != 0)
-                        g.FillEllipse(board[i, j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
+                    if (board[i,j] != 0)
+                        g.FillEllipse(board[i,j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
+                    else if (validLocations[i,j] == 1)
+                        g.FillEllipse(Brushes.Yellow, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
                 }
-            }
+            }            
 
             // Draw score
             Rectangle rect1, rect2;
 
-            Font font = new Font(FontFamily.GenericSansSerif, 12, FontStyle.Bold);
+            Font font = new Font(FontFamily.GenericSansSerif, 11, FontStyle.Bold);
 
             rect1 = new Rectangle(d, y * d + 2 * d, circleSize, circleSize);
             rect2 = new Rectangle(x * d, y * d + 2 * d, circleSize, circleSize);
@@ -120,7 +126,7 @@ namespace Reversi
             int coordX = (int)Math.Floor((double)(mea.X - d) / d);
             int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
 
-            if (isValidLocation(coordX, coordY))
+            if (coordX >= 0 && coordX < x && coordY >= 0 && coordY < y && validLocations[coordX, coordY] == 1)
             {
                 board[coordX, coordY] = currentPlayer;
 
@@ -139,19 +145,63 @@ namespace Reversi
             }
         }
 
+        private int[,] getValidLocations()
+        {
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    if (isValidLocation(i, j))
+                        validLocations[i, j] = 1;
+                }
+            }
+
+            return validLocations;
+        }
+
         private bool isValidLocation(int coordX, int coordY)
         {
-            if (coordX < 0 || coordX >= x || coordY < 0 || coordY >= y)
-            {
-                return false;
-            }
-
+            // If location is not empty immediately invalidate it 
             if (board[coordX, coordY] != 0)
-            {
                 return false;
+
+            // Define opponent
+            int opponent = currentPlayer == 1 ? 2 : 1;
+
+            // Define possible operations (directions)
+            int[][] operations = new int[][] {
+                new int[] {0,-1},    // Up
+                new int[] {1,-1},    // Up Right
+                new int[] {1,0},     // Right
+                new int[] {1,1},     // Down Right
+                new int[] {0,1},     // Down
+                new int[] {-1,1},    // Down left
+                new int[] {-1,0},    // Left
+                new int[] {-1,-1},   // Up Left
+            };
+
+            /* Try all directions for the current location, the first spot we encounter NEEDS to be occupied by the opponent, if we find an empty spot after that => break loop,
+             * if we find another spot occupied by opponent => keep digging, if we find a spot occupied by the current player => location is valid */
+            foreach (int[] operation in operations)
+            {
+                for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1]; localX >= 0 && localX < x && localY >= 0 && localY < y; i++, localX += operation[0], localY += operation[1])
+                {
+                    if (i == 0)
+                    {
+                        if (board[localX, localY] != opponent)
+                            break;
+                    }
+                    else
+                    {
+                        if (board[localX, localY] == 0)
+                            break;
+                        else if (board[localX, localY] == currentPlayer)
+                            return true;
+                    }
+                }
             }
 
-            return true;
+            return false;
         }
 
         private int calculateScore(int player)
