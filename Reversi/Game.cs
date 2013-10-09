@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -12,7 +13,8 @@ namespace Reversi
         turnblue,
         turnred,
         winblue,
-        winred
+        winred,
+        invalid
     }
 
     public partial class Game : Form
@@ -99,7 +101,7 @@ namespace Reversi
             string reportState = "";
             Rectangle rect3 = new Rectangle(d, y * d + 2 * d, x * d, d);
 
-            if(state == Status.welcome)
+            if (state == Status.welcome)
                 reportState = "Let's play reversi!";
             else if (state == Status.newgame)
                 reportState = "Started a new game";
@@ -111,6 +113,8 @@ namespace Reversi
                 reportState = "Blue has won the game!";
             else if (state == Status.winred)
                 reportState = "Red has won the game!";
+            else if (state == Status.invalid)
+                reportState = "Invalid move";
 
             g.DrawString(reportState, font, Brushes.Black, rect3, stringFormat);
         }
@@ -120,10 +124,9 @@ namespace Reversi
             int coordX = (int)Math.Floor((double)(mea.X - d) / d);
             int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
 
-            if (isValidLocation(coordX, coordY))
+            if (isWithinBounds(coordX, coordY) && isMoveValid(coordX, coordY, currentPlayer))
             {
                 board[coordX, coordY] = currentPlayer;
-
                 if (currentPlayer == 1)
                 {
                     currentPlayer = 2;
@@ -134,24 +137,86 @@ namespace Reversi
                     currentPlayer = 1;
                     state = Status.turnred;
                 }
-
-                this.Invalidate();
             }
+
+            this.Invalidate();
         }
 
-        private bool isValidLocation(int coordX, int coordY)
+        private bool isMoveValid(int coordX, int coordY, int currentPlayer)
         {
-            if (coordX < 0 || coordX >= x || coordY < 0 || coordY >= y)
-            {
-                return false;
-            }
+            int tempX, tempY, counter = 0, result = 0;
+            int enemyPlayer = (currentPlayer == 1) ? 2 : 1;
+            Point[] replaceLocations = new Point[(x > y) ? x : y];
 
+            // Abort if the position is already taken
             if (board[coordX, coordY] != 0)
+                return false;
+
+            // Calculate the relative location of adjecent enemy pieces
+            for (int localx = -1; localx <= 1; localx++)
             {
+                for (int localy = -1; localy <= 1; localy++)
+                {
+                    
+                    if (isWithinBounds(coordX + localx, coordY + localy))
+                    {
+                        tempX = localx;
+                        tempY = localy;
+                        while (nextPiece(coordX, coordY, tempX, tempY) == enemyPlayer)
+                        {
+                            replaceLocations[counter] = new Point(coordX + tempX, coordY + tempY);
+                            tempX += tempX;
+                            tempY += tempY;
+                            
+                            counter++;
+                        }
+                        if(isWithinBounds(coordX + tempX, coordY + tempY) && counter != 0)
+                        {
+                            if (board[coordX + tempX, coordY + tempY] == currentPlayer)
+                            {
+                                result++;
+                                for (int h = 0; h < counter; h++)
+                                    board[replaceLocations[h].X, replaceLocations[h].Y] = currentPlayer;
+
+                            
+                            }
+                        }
+                        counter = 0;
+                    }
+                }
+            }
+            
+            
+
+            Debug.WriteLine(counter);
+
+            if (result == 0)
+            {
+                state = Status.invalid;
                 return false;
             }
+            else            
+                return true;
+        }
 
-            return true;
+        private int nextPiece(int coordX, int coordY, int relativeX, int relativeY)
+        {
+            int resx = coordX + relativeX;
+            int resy = coordY + relativeY;
+
+            if (isWithinBounds(resx, resy))
+                return board[resx, resy];
+            else
+                return 0;
+        }
+
+
+
+
+
+        private bool isWithinBounds(int xi, int yi)
+        {
+            return xi >= 0 && xi < x && yi >= 0 && yi < y;
         }
 
         private int calculateScore(int player)
