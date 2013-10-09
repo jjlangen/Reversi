@@ -126,7 +126,7 @@ namespace Reversi
             int coordX = (int)Math.Floor((double)(mea.X - d) / d);
             int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
 
-            if (coordX >= 0 && coordX < x && coordY >= 0 && coordY < y && validLocations[coordX, coordY] == 1)
+            if (isWithinBounds(coordX, coordY) && validLocations[coordX, coordY] == 1)
             {
                 board[coordX, coordY] = currentPlayer;
 
@@ -184,7 +184,7 @@ namespace Reversi
              * if we find another spot occupied by opponent => keep digging, if we find a spot occupied by the current player => location is valid */
             foreach (int[] operation in operations)
             {
-                for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1]; localX >= 0 && localX < x && localY >= 0 && localY < y; i++, localX += operation[0], localY += operation[1])
+                for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1]; isWithinBounds(localX, localY); i++, localX += operation[0], localY += operation[1])
                 {
                     if (i == 0)
                     {
@@ -202,6 +202,11 @@ namespace Reversi
             }
 
             return false;
+        }
+
+        private bool isWithinBounds(int xi, int yi)
+        {
+            return xi >= 0 && xi < x && yi >= 0 && yi < y;
         }
 
         private int calculateScore(int player)
