@@ -19,9 +19,8 @@ namespace Reversi
 
     public partial class Game : Form
     {
-        const int x = 6;
-        const int y = 6;
-        const int d = 50;
+        // Constants x and y affect rows and colums on the board, d is the field size
+        const int x = 6, y = 6, d = 50;
         int currentPlayer;
         Status state;
         int[,] board;
@@ -146,7 +145,8 @@ namespace Reversi
         {
             int tempX, tempY, counter = 0, result = 0;
             int enemyPlayer = (currentPlayer == 1) ? 2 : 1;
-            Point[] replaceLocations = new Point[(x > y) ? x : y];
+            Point[] replaceLocations = new Point[50];
+            string d1 = "", d2 = "", d3 = "";
 
             // Abort if the position is already taken
             if (board[coordX, coordY] != 0)
@@ -157,39 +157,39 @@ namespace Reversi
             {
                 for (int localy = -1; localy <= 1; localy++)
                 {
-                    
                     if (isWithinBounds(coordX + localx, coordY + localy))
                     {
                         tempX = localx;
                         tempY = localy;
+
                         while (nextPiece(coordX, coordY, tempX, tempY) == enemyPlayer)
                         {
                             replaceLocations[counter] = new Point(coordX + tempX, coordY + tempY);
-                            tempX += tempX;
-                            tempY += tempY;
-                            
+                            tempX += localx;
+                            tempY += localy;
+                            Debug.WriteLine("replaceLoc[" + counter+ "]: " + replaceLocations[counter]);
                             counter++;
                         }
+                        Debug.Write("nextPiece: " + nextPiece(coordX, coordY, tempX, tempY) + " ");
+                        Debug.WriteLine("coordX, coordY, tempX, tempY: " + coordX + " " + coordY + " " + tempX + " " + tempY);
                         if(isWithinBounds(coordX + tempX, coordY + tempY) && counter != 0)
                         {
                             if (board[coordX + tempX, coordY + tempY] == currentPlayer)
                             {
-                                result++;
                                 for (int h = 0; h < counter; h++)
+                                {
                                     board[replaceLocations[h].X, replaceLocations[h].Y] = currentPlayer;
+                                }
 
-                            
+                                result++;
                             }
                         }
+                        d1 += counter;
                         counter = 0;
                     }
                 }
             }
-            
-            
-
-            Debug.WriteLine(counter);
-
+            Debug.WriteLine("Counter: " + d1);
             if (result == 0)
             {
                 state = Status.invalid;
@@ -197,6 +197,10 @@ namespace Reversi
             }
             else            
                 return true;
+        }
+
+        private void changePieces()
+        {
         }
 
         private int nextPiece(int coordX, int coordY, int relativeX, int relativeY)
@@ -210,13 +214,10 @@ namespace Reversi
                 return 0;
         }
 
-
-
-
-
-        private bool isWithinBounds(int xi, int yi)
+        // Checks if the given field is within the boundaries of the board
+        private static bool isWithinBounds(int xx, int yy)
         {
-            return xi >= 0 && xi < x && yi >= 0 && yi < y;
+            return xx >= 0 && xx < x && yy >= 0 && yy < y;
         }
 
         private int calculateScore(int player)
@@ -230,15 +231,12 @@ namespace Reversi
             return res;
         }
 
+        #region Eventhandlers
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
         {
             newGame();
             this.Invalidate();
         }
-
-        private void toolStripDropDownButton1_Click(object sender, EventArgs e)
-        {
-
-        }
+        #endregion
     }
 }
