@@ -24,7 +24,7 @@ namespace Reversi
         int currentPlayer;
         Status state;
         int[,] board;
-        int[,] validLocations = new int[x, y];
+        int[,] validLocations;
 
         public Game()
         {
@@ -147,6 +147,9 @@ namespace Reversi
 
         private int[,] getValidLocations()
         {
+            validLocations = null;
+            validLocations = new int[x, y];
+
             for (int i = 0; i < x; i++)
             {
                 for (int j = 0; j < y; j++)
