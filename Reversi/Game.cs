@@ -19,9 +19,9 @@ namespace Reversi
     public partial class Game : Form
     {
         // Constants x and y affect rows and colums on the board, d is the field size
-        const int x = 14;
-        const int y = 8;
-        const int d = 80;
+        const int x = 10;
+        const int y = 10;
+        const int d = 50;
         int currentPlayer;
         bool pressedHelp;
         Status state;
@@ -185,9 +185,10 @@ namespace Reversi
                     currentPlayer = 1;
                     state = Status.turnred;
                 }
-            }
 
-            this.Invalidate();
+                this.Invalidate();
+            }
+  
         }
 
         private int[,] getValidLocations()
