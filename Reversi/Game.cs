@@ -162,10 +162,7 @@ namespace Reversi
                             else if (board[localX, localY] == currentPlayer)
                             {
                                 for (int j = i; j >= 0; j--, localX -= operation[0], localY -= operation[1])
-                                {
                                     board[localX, localY] = currentPlayer;
-                                }
-
                                 break;
                             }
                         }
@@ -189,7 +186,6 @@ namespace Reversi
 
         private int[,] getValidLocations()
         {
-            validLocations = null;
             validLocations = new int[x, y];
 
             for (int i = 0; i < x; i++)
