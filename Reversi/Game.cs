@@ -197,28 +197,28 @@ namespace Reversi
             new int[] {-1,0},    // Left
             new int[] {-1,-1},   // Up Left
             };
-            /* Try all directions for the current location, the first spot we encounter NEEDS to be occupied by the opponent, if we find an empty spot after that => break loop,
-             * if we find another spot occupied by opponent => keep digging, if we find a spot occupied by the current player => location is valid */
+
+            // Try all directions for the current location
             foreach (int[] operation in operations)
             {
                 for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1];
                     isWithinBounds(localX, localY);
                     i++, localX += operation[0], localY += operation[1])
                 {
-                    // Only run the enclosed code on the fields adjacent to the clicked field
+                    // Next code snippet is only for the first piece in any direction
                     if (i == 0)
                     {
-                        // Stop (and return false) if the piece at this location is NOT an opponent
+                        // Stop checking in this direction if the piece adjacent to the clicked field is NOT an opponent
                         if (board[localX, localY] != opponent)
                             break;
                     }
-                    // Run this code when not scanning fields adjacent to the clicked field
+                    // All remaining pieces in any direction
                     else
                     {
-                        // Stop (and return false) if there is no piece at this location
+                        // Stop checking in this direction if there is no piece at this location
                         if (board[localX, localY] == 0)
                             break;
-                        // Finding a piece of the active player returns a positive result
+                        // Finding a piece of the active player after one or more of the opponent means the location is valid
                         else if (board[localX, localY] == activePlayer)
                         {
                             // Flip the pieces if function is called with flip = true
@@ -231,11 +231,13 @@ namespace Reversi
                             }
                             return true;
                         }
-                        // If an opponents piece is found it will just try to run the for-loop once more
+                        // If an opponents piece is found we'll just keep looping in the current direction, searching for one of the active player
                     }
                 }
             }
 
+            // If all directions are checked and none did satisfy our requirements (one or more pieces of an opponent, after that a piece of the active player), 
+            // we'll return false at last
             return false;
         }
 
