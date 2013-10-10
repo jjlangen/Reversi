@@ -27,11 +27,11 @@ namespace Reversi
         const int d = 50;
         #endregion
 
-        #region Globals
-        int activePlayer;
-        bool pressedHelp;
-        Status state;
-        int[,] board;
+        #region Member variables
+        private int activePlayer;
+        private bool pressedHelp;
+        private Status state;
+        private int[,] board;
         #endregion
 
         #region Constructor
