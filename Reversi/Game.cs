@@ -32,18 +32,6 @@ namespace Reversi
         bool pressedHelp;
         Status state;
         int[,] board;
-
-        // Define possible operations (directions)
-        int[][] operations = new int[][] {
-            new int[] {0,-1},    // Up
-            new int[] {1,-1},    // Up Right
-            new int[] {1,0},     // Right
-            new int[] {1,1},     // Down Right
-            new int[] {0,1},     // Down
-            new int[] {-1,1},    // Down left
-            new int[] {-1,0},    // Left
-            new int[] {-1,-1},   // Up Left
-        };
         #endregion
 
         #region Constructor
@@ -165,30 +153,7 @@ namespace Reversi
             if (isWithinBounds(coordX, coordY) && validLocations[coordX, coordY] == 1)
             {
                 board[coordX, coordY] = activePlayer;
-                foreach (int[] operation in operations)
-                {
-                    for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1];
-                        isWithinBounds(localX, localY); 
-                        i++, localX += operation[0], localY += operation[1])
-                    {
-                        if (i == 0)
-                        {
-                            if (board[localX, localY] != opponent)
-                                break;
-                        }
-                        else
-                        {
-                            if (board[localX, localY] == 0)
-                                break;
-                            else if (board[localX, localY] == activePlayer)
-                            {
-                                for (int j = i; j >= 0; j--, localX -= operation[0], localY -= operation[1])
-                                    board[localX, localY] = activePlayer;
-                                break;
-                            }
-                        }
-                    }
-                }
+                flip(coordX, coordY, opponent, true);
                 switchTurns();
             }
         }
@@ -199,6 +164,39 @@ namespace Reversi
             if (board[coordX, coordY] != 0)
                 return false;
 
+            return flip(coordX, coordY, opponent, false);
+        }
+
+        private int[,] getValidLocations()
+        {
+            int[,] validLocations = new int[x, y];
+            int opponent = activePlayer == 1 ? 2 : 1;
+
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    if (isValidLocation(i, j, opponent))
+                        validLocations[i, j] = 1;
+                }
+            }
+
+            return validLocations;
+        }
+
+        private bool flip(int coordX, int coordY, int opponent, bool flip)
+        {
+            // Define possible operations (directions)
+            int[][] operations = new int[][] {
+            new int[] {0,-1},    // Up
+            new int[] {1,-1},    // Up Right
+            new int[] {1,0},     // Right
+            new int[] {1,1},     // Down Right
+            new int[] {0,1},     // Down
+            new int[] {-1,1},    // Down left
+            new int[] {-1,0},    // Left
+            new int[] {-1,-1},   // Up Left
+            };
             /* Try all directions for the current location, the first spot we encounter NEEDS to be occupied by the opponent, if we find an empty spot after that => break loop,
              * if we find another spot occupied by opponent => keep digging, if we find a spot occupied by the current player => location is valid */
             foreach (int[] operation in operations)
@@ -220,32 +218,25 @@ namespace Reversi
                         // Stop (and return false) if there is no piece at this location
                         if (board[localX, localY] == 0)
                             break;
-                        // Finding a piece of the active player returns a possitive result
+                        // Finding a piece of the active player returns a positive result
                         else if (board[localX, localY] == activePlayer)
+                        {
+                            // Flip the pieces if function is called with flip = true
+                            if (flip)
+                            {
+                                // Flip the pieces from end --> start
+                                for (int j = i; j >= 0; j--, localX -= operation[0], localY -= operation[1])
+                                    board[localX, localY] = activePlayer;
+                                break;
+                            }
                             return true;
+                        }
                         // If an opponents piece is found it will just try to run the for-loop once more
                     }
                 }
             }
 
             return false;
-        }
-
-        private int[,] getValidLocations()
-        {
-            int[,] validLocations = new int[x, y];
-            int opponent = activePlayer == 1 ? 2 : 1;
-
-            for (int i = 0; i < x; i++)
-            {
-                for (int j = 0; j < y; j++)
-                {
-                    if (isValidLocation(i, j, opponent))
-                        validLocations[i, j] = 1;
-                }
-            }
-
-            return validLocations;
         }
 
         private void startNewGame(bool firstGame)
