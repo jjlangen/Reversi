@@ -19,7 +19,9 @@ namespace Reversi
     public partial class Game : Form
     {
         // Constants x and y affect rows and colums on the board, d is the field size
-        const int x = 6, y = 6, d = 50;
+        const int x = 6;
+        const int y = 6;
+        const int d = 50;
         int currentPlayer;
         Status state;
         int[,] board;
@@ -189,7 +191,7 @@ namespace Reversi
             validLocations = new int[x, y];
 
             for (int i = 0; i < x; i++)
-            string d1 = "", d2 = "", d3 = "";
+            {
                 for (int j = 0; j < y; j++)
                 {
                     if (isValidLocation(i, j))
@@ -198,7 +200,6 @@ namespace Reversi
             }
 
             return validLocations;
-
         }
 
         private bool isValidLocation(int coordX, int coordY)
@@ -233,7 +234,7 @@ namespace Reversi
 
             return false;
         }
-            else            
+        
         private bool isWithinBounds(int xi, int yi)
         {
             return xi >= 0 && xi < x && yi >= 0 && yi < y;
