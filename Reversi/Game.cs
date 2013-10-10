@@ -12,6 +12,7 @@ namespace Reversi
         newgame,
         turnblue,
         turnred,
+        pass,
         winblue,
         winred,
         remise
@@ -22,16 +23,18 @@ namespace Reversi
     {
         #region Setup
         // Constants x and y affect rows and colums on the board, d is the field size
-        const int x = 6;
-        const int y = 6;
+        const int x = 5;
+        const int y = 5;
         const int d = 50;
         #endregion
 
         #region Member variables
         private int activePlayer;
+        private int passCounter;
         private bool pressedHelp;
         private Status state;
         private int[,] board;
+        private int[,] validLocations;
         #endregion
 
         #region Constructor
@@ -76,8 +79,6 @@ namespace Reversi
 
         private void paintPieces(Graphics g, int circleSize)
         {
-            int[,] validLocations = getValidLocations();
-
             for (int i = 0; i < x; i++)
             {
                 for (int j = 0; j < y; j++)
@@ -125,6 +126,8 @@ namespace Reversi
                 reportState = "Blue's turn";
             else if (state == Status.turnred)
                 reportState = "Red's turn";
+            else if (state == Status.pass)
+                reportState = "Click to pass";
             else if (state == Status.winblue)
                 reportState = "Blue has won the game!";
             else if (state == Status.winred)
@@ -139,19 +142,25 @@ namespace Reversi
         #region Gameplay functions
         private void processClick(object sender, MouseEventArgs mea)
         {
-            int coordX = (int)Math.Floor((double)(mea.X - d) / d);
-            int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
-            int opponent = activePlayer == 1 ? 2 : 1;
-            int[,] validLocations = getValidLocations();
+            if (state == Status.pass)
+            {
+                switchTurns();
+            }
+            else
+            {
+                int coordX = (int)Math.Floor((double)(mea.X - d) / d);
+                int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
+                int opponent = activePlayer == 1 ? 2 : 1;
 
-            addPiece(coordX, coordY, validLocations, opponent);
-            // checkScore();
+                addPiece(coordX, coordY, validLocations, opponent);
+            }
         }
 
         private void addPiece(int coordX, int coordY, int[,] validLocations, int opponent)
         {
             if (isWithinBounds(coordX, coordY) && validLocations[coordX, coordY] == 1)
             {
+                passCounter = 0;
                 board[coordX, coordY] = activePlayer;
                 flip(coordX, coordY, opponent, true);
                 switchTurns();
@@ -169,7 +178,6 @@ namespace Reversi
 
         private int[,] getValidLocations()
         {
-            int[,] validLocations = new int[x, y];
             int opponent = activePlayer == 1 ? 2 : 1;
 
             for (int i = 0; i < x; i++)
@@ -229,6 +237,7 @@ namespace Reversi
                                     board[localX, localY] = activePlayer;
                                 break;
                             }
+
                             return true;
                         }
                         // If an opponents piece is found we'll just keep looping in the current direction, searching for one of the active player
@@ -255,6 +264,10 @@ namespace Reversi
 
             activePlayer = 1;
             pressedHelp = false;
+            passCounter = 0;
+
+            validLocations = new int[x, y];
+            validLocations = getValidLocations();
 
             if (firstGame)
                 state = Status.welcome;
@@ -273,6 +286,33 @@ namespace Reversi
             {
                 activePlayer = 1;
                 state = Status.turnred;
+            }
+
+            // >>>>>>>>>>>> Check some things before starting next round <<<<<<<<<<<
+
+            validLocations = new int[x, y];
+            validLocations = getValidLocations();
+
+            int numberOfValidLocations = 0;
+            foreach (int i in validLocations)
+                numberOfValidLocations += i;
+
+            if (numberOfValidLocations == 0)
+            {
+                state = Status.pass;
+                passCounter++;
+            }
+
+            if (passCounter == 2 || calculateScore(0) == 0)
+            {
+                int red = calculateScore(1);
+                int blue = calculateScore(2);
+                if (red > blue)
+                    state = Status.winred;
+                else if (red < blue)
+                    state = Status.winblue;
+                else
+                    state = Status.remise;
             }
 
             this.Invalidate();
