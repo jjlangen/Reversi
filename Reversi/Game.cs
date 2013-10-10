@@ -19,10 +19,11 @@ namespace Reversi
     public partial class Game : Form
     {
         // Constants x and y affect rows and colums on the board, d is the field size
-        const int x = 6;
-        const int y = 6;
-        const int d = 50;
+        const int x = 14;
+        const int y = 8;
+        const int d = 80;
         int currentPlayer;
+        bool pressedHelp;
         Status state;
         int[,] board;
         int[,] validLocations;
@@ -64,6 +65,7 @@ namespace Reversi
             board[centerX, centerY - 1] = 2;
 
             currentPlayer = 1;
+            pressedHelp = false;
             state = Status.newgame;
         }
 
@@ -89,10 +91,12 @@ namespace Reversi
                 {
                     if (board[i,j] != 0)
                         g.FillEllipse(board[i,j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
-                    else if (validLocations[i,j] == 1)
+                    else if (validLocations[i, j] == 1 && pressedHelp)
                         g.FillEllipse(Brushes.Yellow, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
                 }
-            }            
+            }
+            if(pressedHelp)
+                pressedHelp = false;
 
             // Draw score
             Rectangle rect1, rect2;
@@ -235,7 +239,7 @@ namespace Reversi
             return false;
         }
         
-        private bool isWithinBounds(int xi, int yi)
+        private static bool isWithinBounds(int xi, int yi)
         {
             return xi >= 0 && xi < x && yi >= 0 && yi < y;
         }
@@ -258,5 +262,11 @@ namespace Reversi
             this.Invalidate();
         }
         #endregion
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            pressedHelp = true;
+            this.Invalidate();
+        }
     }
 }
