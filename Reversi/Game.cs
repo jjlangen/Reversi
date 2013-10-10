@@ -13,15 +13,17 @@ namespace Reversi
         turnred,
         winblue,
         winred,
-        invalid
+        remise
     }
 
     public partial class Game : Form
     {
         // Constants x and y affect rows and colums on the board, d is the field size
-        const int x = 10;
-        const int y = 10;
+        const int x = 6;
+        const int y = 6;
         const int d = 50;
+
+        // Global vars
         int currentPlayer;
         bool pressedHelp;
         Status state;
@@ -45,17 +47,16 @@ namespace Reversi
             InitializeComponent();
 
             this.ClientSize = new Size(x * d + 2 * d, y * d + 4 * d);
-            this.Paint += paintBoard;
+            this.Paint += paintGUI;
             this.MouseClick += addPiece;
 
-            newGame();
-            state = Status.welcome;
+            newGame(true);
         }
 
-        private void newGame()
+        private void newGame(bool firstGame)
         {
-            int centerX = x / 2;
-            int centerY = y / 2;
+            const int centerX = x / 2;
+            const int centerY = y / 2;
 
             board = new int[x, y];
 
@@ -66,61 +67,82 @@ namespace Reversi
 
             currentPlayer = 1;
             pressedHelp = false;
-            state = Status.newgame;
+
+            if(firstGame)
+                state = Status.welcome;
+            else
+                state = Status.newgame;
         }
 
-        private void paintBoard(object sender, PaintEventArgs pea)
+        #region Graphical functions
+        private void paintGUI(object sender, PaintEventArgs pea)
+        {
+            const int circleSize = d - 2;
+            Graphics g = pea.Graphics;
+            Font font = new Font(FontFamily.GenericSansSerif, 11, FontStyle.Bold);
+            StringFormat stringFormat = new StringFormat();
+
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            stringFormat.Alignment = StringAlignment.Center;
+            stringFormat.LineAlignment = StringAlignment.Center;
+            
+            paintBoard(g, circleSize);
+            paintPieces(g, circleSize);
+            paintScore(g, stringFormat, font, circleSize);
+            paintState(g, stringFormat, font);
+        }
+
+        private void paintBoard(Graphics g, int circleSize)
         {
             int[,] validLocations = getValidLocations();
 
-            Graphics g = pea.Graphics;
-            int circleSize = d - 2;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
-
-            // Draw lines
             for (int i = 0; i <= x; i++)
                 g.DrawLine(Pens.Black, i * d + d, d, i * d + d, y * d + d);
 
             for (int i = 0; i <= y; i++)
                 g.DrawLine(Pens.Black, d, i * d + d, x * d + d, i * d + d);
+        }
 
-            // Draw pieces
+        private void paintPieces(Graphics g, int circleSize)
+        {
             for (int i = 0; i < x; i++)
             {
                 for (int j = 0; j < y; j++)
                 {
-                    if (board[i,j] != 0)
-                        g.FillEllipse(board[i,j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
-                    else if (validLocations[i, j] == 1 && pressedHelp)
+                    if (board[i, j] != 0)
+                        g.FillEllipse(board[i, j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
+                    else if (pressedHelp && validLocations[i, j] == 1)
                         g.FillEllipse(Brushes.Yellow, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
                 }
             }
-            if(pressedHelp)
+
+            if (pressedHelp)
                 pressedHelp = false;
+        }
 
-            // Draw score
+        private void paintScore(Graphics g, StringFormat sf, Font f,  int circleSize)
+        {
             Rectangle rect1, rect2;
-
-            Font font = new Font(FontFamily.GenericSansSerif, 11, FontStyle.Bold);
 
             rect1 = new Rectangle(d, y * d + 2 * d, circleSize, circleSize);
             rect2 = new Rectangle(x * d, y * d + 2 * d, circleSize, circleSize);
 
-            StringFormat stringFormat = new StringFormat();
-            stringFormat.Alignment = StringAlignment.Center;
-            stringFormat.LineAlignment = StringAlignment.Center;
-
             g.FillEllipse(Brushes.Red, rect1);
             g.FillEllipse(Brushes.Blue, rect2);
-            g.DrawString(calculateScore(1).ToString(), font, Brushes.White, rect1, stringFormat);
-            g.DrawString(calculateScore(2).ToString(), font, Brushes.White, rect2, stringFormat);
+            g.DrawString(calculateScore(1).ToString(), f, Brushes.White, rect1, sf);
+            g.DrawString(calculateScore(2).ToString(), f, Brushes.White, rect2, sf);
 
-            Pen pen = new Pen(Brushes.Yellow, 5);
-            g.DrawEllipse(pen, currentPlayer == 1 ? rect1 : rect2);
+            // Paint a yellow circle around active player
+            g.DrawEllipse(new Pen(Brushes.Yellow, 5), currentPlayer == 1 ? rect1 : rect2);
+        }
 
-            // Draw game state
+        private void paintState(Graphics g, StringFormat sf, Font f)
+        {
+            Rectangle rect;
             string reportState = "";
-            Rectangle rect3 = new Rectangle(d, y * d + 2 * d, x * d, d);
+
+            // Make a rectangle around the entire scoreboard to help center the gamestate text
+            rect = new Rectangle(d, y * d + 2 * d, x * d, d);
 
             if (state == Status.welcome)
                 reportState = "Let's play reversi!";
@@ -134,11 +156,12 @@ namespace Reversi
                 reportState = "Blue has won the game!";
             else if (state == Status.winred)
                 reportState = "Red has won the game!";
-            else if (state == Status.invalid)
-                reportState = "Invalid move";
+            else if (state == Status.remise)
+                reportState = "It's a tie!";
 
-            g.DrawString(reportState, font, Brushes.Black, rect3, stringFormat);
+            g.DrawString(reportState, f, Brushes.Black, rect, sf);
         }
+        #endregion
 
         private void addPiece(object sender, MouseEventArgs mea)
         {
@@ -259,7 +282,7 @@ namespace Reversi
         #region Eventhandlers
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            newGame();
+            newGame(false);
             this.Invalidate();
         }
         #endregion
