@@ -1,4 +1,9 @@
 ﻿using System;
+<<<<<<< HEAD
+using System.Diagnostics;
+=======
+using System.Linq;
+>>>>>>> origin/alt
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
@@ -139,11 +144,17 @@ namespace Reversi
             int coordX = (int)Math.Floor((double)(mea.X - d) / d);
             int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
 
+<<<<<<< HEAD
+            if (isWithinBounds(coordX, coordY) && isMoveValid(coordX, coordY, currentPlayer))
+            {
+                board[coordX, coordY] = currentPlayer;
+=======
             int opponent = currentPlayer == 1 ? 2 : 1;
 
             if (isWithinBounds(coordX, coordY) && validLocations[coordX, coordY] == 1)
             {
                 board[coordX, coordY] = currentPlayer;
+
                 foreach (int[] operation in operations)
                 {
                     for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1]; isWithinBounds(localX, localY); i++, localX += operation[0], localY += operation[1])
@@ -169,6 +180,7 @@ namespace Reversi
                     }
                 }
 
+>>>>>>> origin/alt
                 if (currentPlayer == 1)
                 {
                     currentPlayer = 2;
@@ -184,12 +196,66 @@ namespace Reversi
             this.Invalidate();
         }
 
+<<<<<<< HEAD
+        private bool isMoveValid(int coordX, int coordY, int currentPlayer)
+        {
+            int tempX, tempY, counter = 0, result = 0;
+            int enemyPlayer = (currentPlayer == 1) ? 2 : 1;
+            Point[] replaceLocations = new Point[50];
+            string d1 = "", d2 = "", d3 = "";
+
+            // Abort if the position is already taken
+            if (board[coordX, coordY] != 0)
+                return false;
+
+            // Calculate the relative location of adjecent enemy pieces
+            for (int localx = -1; localx <= 1; localx++)
+            {
+                for (int localy = -1; localy <= 1; localy++)
+                {
+                    if (isWithinBounds(coordX + localx, coordY + localy))
+                    {
+                        tempX = localx;
+                        tempY = localy;
+
+                        while (nextPiece(coordX, coordY, tempX, tempY) == enemyPlayer)
+                        {
+                            replaceLocations[counter] = new Point(coordX + tempX, coordY + tempY);
+                            tempX += localx;
+                            tempY += localy;
+                            Debug.WriteLine("replaceLoc[" + counter+ "]: " + replaceLocations[counter]);
+                            counter++;
+                        }
+                        Debug.Write("nextPiece: " + nextPiece(coordX, coordY, tempX, tempY) + " ");
+                        Debug.WriteLine("coordX, coordY, tempX, tempY: " + coordX + " " + coordY + " " + tempX + " " + tempY);
+                        if(isWithinBounds(coordX + tempX, coordY + tempY) && counter != 0)
+                        {
+                            if (board[coordX + tempX, coordY + tempY] == currentPlayer)
+                            {
+                                for (int h = 0; h < counter; h++)
+                                {
+                                    board[replaceLocations[h].X, replaceLocations[h].Y] = currentPlayer;
+                                }
+
+                                result++;
+                            }
+                        }
+                        d1 += counter;
+                        counter = 0;
+                    }
+                }
+            }
+            Debug.WriteLine("Counter: " + d1);
+            if (result == 0)
+            {
+                state = Status.invalid;
+=======
         private int[,] getValidLocations()
         {
             validLocations = new int[x, y];
 
             for (int i = 0; i < x; i++)
-            string d1 = "", d2 = "", d3 = "";
+            {
                 for (int j = 0; j < y; j++)
                 {
                     if (isValidLocation(i, j))
@@ -198,13 +264,13 @@ namespace Reversi
             }
 
             return validLocations;
-
         }
 
         private bool isValidLocation(int coordX, int coordY)
         {
             // If location is not empty immediately invalidate it 
             if (board[coordX, coordY] != 0)
+>>>>>>> origin/alt
                 return false;
 
             // Define opponent
@@ -230,13 +296,38 @@ namespace Reversi
                     }
                 }
             }
+            else            
+                return true;
+        }
 
+<<<<<<< HEAD
+        private void changePieces()
+        {
+        }
+
+        private int nextPiece(int coordX, int coordY, int relativeX, int relativeY)
+        {
+            int resx = coordX + relativeX;
+            int resy = coordY + relativeY;
+
+            if (isWithinBounds(resx, resy))
+                return board[resx, resy];
+            else
+                return 0;
+        }
+
+        // Checks if the given field is within the boundaries of the board
+        private static bool isWithinBounds(int xx, int yy)
+        {
+            return xx >= 0 && xx < x && yy >= 0 && yy < y;
+=======
             return false;
         }
-            else            
+
         private bool isWithinBounds(int xi, int yi)
         {
             return xi >= 0 && xi < x && yi >= 0 && yi < y;
+>>>>>>> origin/alt
         }
 
         private int calculateScore(int player)
