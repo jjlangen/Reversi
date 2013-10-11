@@ -23,8 +23,8 @@ namespace Reversi
     {
         #region Setup
         // Constants x and y affect rows and colums on the board, d is the field size
-        const int x = 5;
-        const int y = 5;
+        const int x = 6;
+        const int y = 6;
         const int d = 50;
         #endregion
 
@@ -129,9 +129,9 @@ namespace Reversi
             else if (state == Status.pass)
                 reportState = "Click to pass";
             else if (state == Status.winblue)
-                reportState = "Blue has won the game!";
+                reportState = "Blue wins!";
             else if (state == Status.winred)
-                reportState = "Red has won the game!";
+                reportState = "Red wins!";
             else if (state == Status.remise)
                 reportState = "It's a tie!";
 
@@ -142,18 +142,14 @@ namespace Reversi
         #region Gameplay functions
         private void processClick(object sender, MouseEventArgs mea)
         {
-            if (state == Status.pass)
-            {
-                switchTurns();
-            }
-            else
-            {
-                int coordX = (int)Math.Floor((double)(mea.X - d) / d);
-                int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
-                int opponent = activePlayer == 1 ? 2 : 1;
+            int coordX = (int)Math.Floor((double)(mea.X - d) / d);
+            int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
+            int opponent = activePlayer == 1 ? 2 : 1;
 
+            if (state == Status.pass)
+                switchTurns();
+            else
                 addPiece(coordX, coordY, validLocations, opponent);
-            }
         }
 
         private void addPiece(int coordX, int coordY, int[,] validLocations, int opponent)
@@ -191,7 +187,9 @@ namespace Reversi
 
             return validLocations;
         }
-
+        
+        // Flip() flips the pieces which are between the clicked field and the active player's pieces, if the parameter flip is set to true.
+        // If the parameter flip is set to false, it will just return true or false without flipping.
         private bool flip(int coordX, int coordY, int opponent, bool flip)
         {
             // Define possible operations (directions)
@@ -240,7 +238,7 @@ namespace Reversi
 
                             return true;
                         }
-                        // If an opponents piece is found we'll just keep looping in the current direction, searching for one of the active player
+                        // If an opponent's piece is found we'll just keep looping in the current direction, searching for one of the active player
                     }
                 }
             }
@@ -288,12 +286,16 @@ namespace Reversi
                 state = Status.turnred;
             }
 
-            // >>>>>>>>>>>> Check some things before starting next round <<<<<<<<<<<
+            checkValidLocations();
+            this.Invalidate();
+        }
 
+        private void checkValidLocations()
+        {
             validLocations = new int[x, y];
             validLocations = getValidLocations();
-
             int numberOfValidLocations = 0;
+
             foreach (int i in validLocations)
                 numberOfValidLocations += i;
 
@@ -307,6 +309,7 @@ namespace Reversi
             {
                 int red = calculateScore(1);
                 int blue = calculateScore(2);
+
                 if (red > blue)
                     state = Status.winred;
                 else if (red < blue)
@@ -314,8 +317,6 @@ namespace Reversi
                 else
                     state = Status.remise;
             }
-
-            this.Invalidate();
         }
 
         private int calculateScore(int player)
@@ -346,6 +347,11 @@ namespace Reversi
         {
             pressedHelp = true;
             this.Invalidate();
+        }
+
+        private void quitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
         #endregion
     }
