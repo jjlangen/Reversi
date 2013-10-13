@@ -1,125 +1,122 @@
 ﻿using System;
-<<<<<<< HEAD
-using System.Diagnostics;
-=======
-using System.Linq;
->>>>>>> origin/alt
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 namespace Reversi
 {
+    #region Enumerations
     public enum Status
     {
         welcome,
         newgame,
         turnblue,
         turnred,
+        pass,
         winblue,
         winred,
-        invalid
+        remise
     }
+    #endregion
 
     public partial class Game : Form
     {
+        #region Setup
         // Constants x and y affect rows and colums on the board, d is the field size
-        const int x = 6, y = 6, d = 50;
-        int currentPlayer;
-        Status state;
-        int[,] board;
-        int[,] validLocations;
+        const int x = 6;
+        const int y = 6;
+        const int d = 50;
+        #endregion
 
-        // Define possible operations (directions)
-        int[][] operations = new int[][] {
-            new int[] {0,-1},    // Up
-            new int[] {1,-1},    // Up Right
-            new int[] {1,0},     // Right
-            new int[] {1,1},     // Down Right
-            new int[] {0,1},     // Down
-            new int[] {-1,1},    // Down left
-            new int[] {-1,0},    // Left
-            new int[] {-1,-1},   // Up Left
-        };
+        #region Member variables
+        private int activePlayer;
+        private int passCounter;
+        private bool pressedHelp;
+        private Status state;
+        private int[,] board;
+        private int[,] validLocations;
+        #endregion
 
+        #region Constructor
         public Game()
         {
             InitializeComponent();
 
             this.ClientSize = new Size(x * d + 2 * d, y * d + 4 * d);
-            this.Paint += paintBoard;
-            this.MouseClick += addPiece;
+            this.Paint += paintGUI;
+            this.MouseClick += processClick;
 
-            newGame();
-            state = Status.welcome;
+            startNewGame(true);
         }
+        #endregion
 
-        private void newGame()
+        #region Graphical functions
+        private void paintGUI(object sender, PaintEventArgs pea)
         {
-            int centerX = x / 2;
-            int centerY = y / 2;
-
-            board = new int[x, y];
-
-            board[centerX - 1, centerY - 1] = 1;
-            board[centerX - 1, centerY] = 2;
-            board[centerX, centerY] = 1;
-            board[centerX, centerY - 1] = 2;
-
-            currentPlayer = 1;
-            state = Status.newgame;
-        }
-
-        private void paintBoard(object sender, PaintEventArgs pea)
-        {
-            int[,] validLocations = getValidLocations();
-
+            const int circleSize = d - 2;
             Graphics g = pea.Graphics;
-            int circleSize = d - 2;
-            g.SmoothingMode = SmoothingMode.AntiAlias;
+            Font font = new Font(FontFamily.GenericSansSerif, 11, FontStyle.Bold);
+            StringFormat stringFormat = new StringFormat();
 
-            // Draw lines
+            g.SmoothingMode = SmoothingMode.AntiAlias;
+            stringFormat.Alignment = StringAlignment.Center;
+            stringFormat.LineAlignment = StringAlignment.Center;
+            
+            paintBoard(g, circleSize);
+            paintPieces(g, circleSize);
+            paintScore(g, stringFormat, font, circleSize);
+            paintState(g, stringFormat, font);
+        }
+
+        private void paintBoard(Graphics g, int circleSize)
+        {
             for (int i = 0; i <= x; i++)
                 g.DrawLine(Pens.Black, i * d + d, d, i * d + d, y * d + d);
 
             for (int i = 0; i <= y; i++)
                 g.DrawLine(Pens.Black, d, i * d + d, x * d + d, i * d + d);
+        }
 
-            // Draw pieces
+        private void paintPieces(Graphics g, int circleSize)
+        {
             for (int i = 0; i < x; i++)
             {
                 for (int j = 0; j < y; j++)
                 {
-                    if (board[i,j] != 0)
-                        g.FillEllipse(board[i,j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
-                    else if (validLocations[i,j] == 1)
+                    if (board[i, j] != 0)
+                        g.FillEllipse(board[i, j] == 1 ? Brushes.Red : Brushes.Blue, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
+                    else if (pressedHelp && validLocations[i, j] == 1)
                         g.FillEllipse(Brushes.Yellow, i * d + d + 1, j * d + d + 1, circleSize, circleSize);
                 }
-            }            
+            }
 
-            // Draw score
+            if (pressedHelp)
+                pressedHelp = false;
+        }
+
+        private void paintScore(Graphics g, StringFormat sf, Font f,  int circleSize)
+        {
             Rectangle rect1, rect2;
-
-            Font font = new Font(FontFamily.GenericSansSerif, 11, FontStyle.Bold);
 
             rect1 = new Rectangle(d, y * d + 2 * d, circleSize, circleSize);
             rect2 = new Rectangle(x * d, y * d + 2 * d, circleSize, circleSize);
 
-            StringFormat stringFormat = new StringFormat();
-            stringFormat.Alignment = StringAlignment.Center;
-            stringFormat.LineAlignment = StringAlignment.Center;
-
             g.FillEllipse(Brushes.Red, rect1);
             g.FillEllipse(Brushes.Blue, rect2);
-            g.DrawString(calculateScore(1).ToString(), font, Brushes.White, rect1, stringFormat);
-            g.DrawString(calculateScore(2).ToString(), font, Brushes.White, rect2, stringFormat);
+            g.DrawString(calculateScore(1).ToString(), f, Brushes.White, rect1, sf);
+            g.DrawString(calculateScore(2).ToString(), f, Brushes.White, rect2, sf);
 
-            Pen pen = new Pen(Brushes.Yellow, 5);
-            g.DrawEllipse(pen, currentPlayer == 1 ? rect1 : rect2);
+            // Paint a yellow circle around active player
+            g.DrawEllipse(new Pen(Brushes.Yellow, 5), activePlayer == 1 ? rect1 : rect2);
+        }
 
-            // Draw game state
+        private void paintState(Graphics g, StringFormat sf, Font f)
+        {
+            Rectangle rect;
             string reportState = "";
-            Rectangle rect3 = new Rectangle(d, y * d + 2 * d, x * d, d);
+
+            // A helper rectangle around the entire scoreboard to align the gamestate text
+            rect = new Rectangle(d, y * d + 2 * d, x * d, d);
 
             if (state == Status.welcome)
                 reportState = "Let's play reversi!";
@@ -129,205 +126,214 @@ namespace Reversi
                 reportState = "Blue's turn";
             else if (state == Status.turnred)
                 reportState = "Red's turn";
+            else if (state == Status.pass)
+                reportState = "Click to pass";
             else if (state == Status.winblue)
-                reportState = "Blue has won the game!";
+                reportState = "Blue wins!";
             else if (state == Status.winred)
-                reportState = "Red has won the game!";
-            else if (state == Status.invalid)
-                reportState = "Invalid move";
+                reportState = "Red wins!";
+            else if (state == Status.remise)
+                reportState = "It's a tie!";
 
-            g.DrawString(reportState, font, Brushes.Black, rect3, stringFormat);
+            g.DrawString(reportState, f, Brushes.Black, rect, sf);
         }
+        #endregion
 
-        private void addPiece(object sender, MouseEventArgs mea)
+        #region Gameplay functions
+        private void processClick(object sender, MouseEventArgs mea)
         {
             int coordX = (int)Math.Floor((double)(mea.X - d) / d);
             int coordY = (int)Math.Floor((double)(mea.Y - d) / d);
+            int opponent = activePlayer == 1 ? 2 : 1;
 
-<<<<<<< HEAD
-            if (isWithinBounds(coordX, coordY) && isMoveValid(coordX, coordY, currentPlayer))
-            {
-                board[coordX, coordY] = currentPlayer;
-=======
-            int opponent = currentPlayer == 1 ? 2 : 1;
-
-            if (isWithinBounds(coordX, coordY) && validLocations[coordX, coordY] == 1)
-            {
-                board[coordX, coordY] = currentPlayer;
-
-                foreach (int[] operation in operations)
-                {
-                    for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1]; isWithinBounds(localX, localY); i++, localX += operation[0], localY += operation[1])
-                    {
-                        if (i == 0)
-                        {
-                            if (board[localX, localY] != opponent)
-                                break;
-                        }
-                        else
-                        {
-                            if (board[localX, localY] == 0)
-                            {
-                                break;
-                            }
-                            else if (board[localX, localY] == currentPlayer)
-                            {
-                                for (int j = i; j >= 0; j--, localX -= operation[0], localY -= operation[1])
-                                    board[localX, localY] = currentPlayer;
-                                break;
-                            }
-                        }
-                    }
-                }
-
->>>>>>> origin/alt
-                if (currentPlayer == 1)
-                {
-                    currentPlayer = 2;
-                    state = Status.turnblue;
-                }
-                else if (currentPlayer == 2)
-                {
-                    currentPlayer = 1;
-                    state = Status.turnred;
-                }
-            }
-
-            this.Invalidate();
+            if (state == Status.pass)
+                switchTurns();
+            else
+                addPiece(coordX, coordY, validLocations, opponent);
         }
 
-<<<<<<< HEAD
-        private bool isMoveValid(int coordX, int coordY, int currentPlayer)
+        private void addPiece(int coordX, int coordY, int[,] validLocations, int opponent)
         {
-            int tempX, tempY, counter = 0, result = 0;
-            int enemyPlayer = (currentPlayer == 1) ? 2 : 1;
-            Point[] replaceLocations = new Point[50];
-            string d1 = "", d2 = "", d3 = "";
+            if (isWithinBounds(coordX, coordY) && validLocations[coordX, coordY] == 1)
+            {
+                passCounter = 0;
+                board[coordX, coordY] = activePlayer;
+                flip(coordX, coordY, opponent, true);
+                switchTurns();
+            }
+        }
 
-            // Abort if the position is already taken
+        private bool isValidLocation(int coordX, int coordY, int opponent)
+        {
+            // If the location is taken, return false
             if (board[coordX, coordY] != 0)
                 return false;
 
-            // Calculate the relative location of adjecent enemy pieces
-            for (int localx = -1; localx <= 1; localx++)
-            {
-                for (int localy = -1; localy <= 1; localy++)
-                {
-                    if (isWithinBounds(coordX + localx, coordY + localy))
-                    {
-                        tempX = localx;
-                        tempY = localy;
+            return flip(coordX, coordY, opponent, false);
+        }
 
-                        while (nextPiece(coordX, coordY, tempX, tempY) == enemyPlayer)
-                        {
-                            replaceLocations[counter] = new Point(coordX + tempX, coordY + tempY);
-                            tempX += localx;
-                            tempY += localy;
-                            Debug.WriteLine("replaceLoc[" + counter+ "]: " + replaceLocations[counter]);
-                            counter++;
-                        }
-                        Debug.Write("nextPiece: " + nextPiece(coordX, coordY, tempX, tempY) + " ");
-                        Debug.WriteLine("coordX, coordY, tempX, tempY: " + coordX + " " + coordY + " " + tempX + " " + tempY);
-                        if(isWithinBounds(coordX + tempX, coordY + tempY) && counter != 0)
-                        {
-                            if (board[coordX + tempX, coordY + tempY] == currentPlayer)
-                            {
-                                for (int h = 0; h < counter; h++)
-                                {
-                                    board[replaceLocations[h].X, replaceLocations[h].Y] = currentPlayer;
-                                }
-
-                                result++;
-                            }
-                        }
-                        d1 += counter;
-                        counter = 0;
-                    }
-                }
-            }
-            Debug.WriteLine("Counter: " + d1);
-            if (result == 0)
-            {
-                state = Status.invalid;
-=======
-        private int[,] getValidLocations()
+        private int getValidLocations()
         {
+            int numberOfValidLocations = 0;
+            int opponent = activePlayer == 1 ? 2 : 1;
+
             validLocations = new int[x, y];
 
             for (int i = 0; i < x; i++)
             {
                 for (int j = 0; j < y; j++)
                 {
-                    if (isValidLocation(i, j))
+                    if (isValidLocation(i, j, opponent))
+                    {
                         validLocations[i, j] = 1;
+                        numberOfValidLocations++;
+                    }
                 }
             }
 
-            return validLocations;
+            return numberOfValidLocations;
         }
-
-        private bool isValidLocation(int coordX, int coordY)
+        
+        // Flip() flips the pieces which are between the clicked field and the active player's pieces, if the parameter flip is set to true.
+        // If the parameter flip is set to false, it will just return true or false without flipping.
+        private bool flip(int coordX, int coordY, int opponent, bool flip)
         {
-            // If location is not empty immediately invalidate it 
-            if (board[coordX, coordY] != 0)
->>>>>>> origin/alt
-                return false;
+            // Define possible operations (directions)
+            int[][] operations = new int[][] {
+            new int[] {0,-1},    // Up
+            new int[] {1,-1},    // Up Right
+            new int[] {1,0},     // Right
+            new int[] {1,1},     // Down Right
+            new int[] {0,1},     // Down
+            new int[] {-1,1},    // Down left
+            new int[] {-1,0},    // Left
+            new int[] {-1,-1},   // Up Left
+            };
 
-            // Define opponent
-            int opponent = currentPlayer == 1 ? 2 : 1;
-
-            /* Try all directions for the current location, the first spot we encounter NEEDS to be occupied by the opponent, if we find an empty spot after that => break loop,
-             * if we find another spot occupied by opponent => keep digging, if we find a spot occupied by the current player => location is valid */
+            // Try all directions for the current location
             foreach (int[] operation in operations)
             {
-                for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1]; isWithinBounds(localX, localY); i++, localX += operation[0], localY += operation[1])
+                for (int i = 0, localX = coordX + operation[0], localY = coordY + operation[1];
+                    isWithinBounds(localX, localY);
+                    i++, localX += operation[0], localY += operation[1])
                 {
+                    // Next code snippet is only for the first piece in any direction
                     if (i == 0)
                     {
+                        // Stop checking in this direction if the piece adjacent to the clicked field is NOT an opponent
                         if (board[localX, localY] != opponent)
                             break;
                     }
+                    // All remaining pieces in any direction
                     else
                     {
+                        // Stop checking in this direction if there is no piece at this location
                         if (board[localX, localY] == 0)
                             break;
-                        else if (board[localX, localY] == currentPlayer)
+                        // Finding a piece of the active player after one or more of the opponent means the location is valid
+                        else if (board[localX, localY] == activePlayer)
+                        {
+                            // Flip the pieces if function is called with flip = true
+                            if (flip)
+                            {
+                                // Flip the pieces from end --> start
+                                for (int j = i; j >= 0; j--, localX -= operation[0], localY -= operation[1])
+                                    board[localX, localY] = activePlayer;
+                                break;
+                            }
+
                             return true;
+                        }
+                        // If an opponent's piece is found we'll just keep looping in the current direction, searching for one of the active player
                     }
                 }
             }
-            else            
-                return true;
-        }
 
-<<<<<<< HEAD
-        private void changePieces()
-        {
-        }
-
-        private int nextPiece(int coordX, int coordY, int relativeX, int relativeY)
-        {
-            int resx = coordX + relativeX;
-            int resy = coordY + relativeY;
-
-            if (isWithinBounds(resx, resy))
-                return board[resx, resy];
-            else
-                return 0;
-        }
-
-        // Checks if the given field is within the boundaries of the board
-        private static bool isWithinBounds(int xx, int yy)
-        {
-            return xx >= 0 && xx < x && yy >= 0 && yy < y;
-=======
+            // If all directions are checked and none did satisfy our requirements (one or more pieces of an opponent, after that a piece of the active player), 
+            // we'll return false at last
             return false;
         }
 
-        private bool isWithinBounds(int xi, int yi)
+        private void startNewGame(bool firstGame)
         {
-            return xi >= 0 && xi < x && yi >= 0 && yi < y;
->>>>>>> origin/alt
+            const int centerX = x / 2;
+            const int centerY = y / 2;
+
+            board = new int[x, y];
+
+            board[centerX - 1, centerY - 1] = 1;
+            board[centerX - 1, centerY] = 2;
+            board[centerX, centerY] = 1;
+            board[centerX, centerY - 1] = 2;
+
+            activePlayer = 1;
+            pressedHelp = false;
+            passCounter = 0;
+
+            getValidLocations();
+
+            if (firstGame)
+                state = Status.welcome;
+            else
+                state = Status.newgame;
+        }
+
+        private void switchTurns()
+        {
+            // Switch between players
+            if (activePlayer == 1)
+            {
+                activePlayer = 2;
+                state = Status.turnblue;
+            }
+            else if (activePlayer == 2)
+            {
+                activePlayer = 1;
+                state = Status.turnred;
+            }
+
+<<<<<<< HEAD
+            // Calculate valid locations before start of turn, if there are no valid locations player needs to pass or... 
+            if (getValidLocations() == 0)
+=======
+            checkValidLocations();
+            this.Invalidate();
+        }
+
+        private void checkValidLocations()
+        {
+            validLocations = new int[x, y];
+            validLocations = getValidLocations();
+            int numberOfValidLocations = 0;
+
+            foreach (int i in validLocations)
+                numberOfValidLocations += i;
+
+            if (numberOfValidLocations == 0)
+>>>>>>> cbec943ab84419a29832bedd5bdaed879747f7a4
+            {
+                state = Status.pass;
+                passCounter++;
+            }
+
+            // .. if both players need to pass directly after eachother or the board is full, calculate winner
+            if (passCounter == 2 || calculateScore(0) == 0)
+            {
+<<<<<<< HEAD
+                int red, blue;
+                if ((red = calculateScore(1)) > (blue = calculateScore(2)))
+=======
+                int red = calculateScore(1);
+                int blue = calculateScore(2);
+
+                if (red > blue)
+>>>>>>> cbec943ab84419a29832bedd5bdaed879747f7a4
+                    state = Status.winred;
+                else if (red < blue)
+                    state = Status.winblue;
+                else
+                    state = Status.remise;
+            }
         }
 
         private int calculateScore(int player)
@@ -341,11 +347,28 @@ namespace Reversi
             return res;
         }
 
-        #region Eventhandlers
+        private static bool isWithinBounds(int xx, int yy)
+        {
+            return xx >= 0 && xx < x && yy >= 0 && yy < y;
+        }
+        #endregion
+
+        #region ToolStripMenu Eventhandlers
         private void newGameToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            newGame();
+            startNewGame(false);
             this.Invalidate();
+        }
+
+        private void toolStripButton1_Click(object sender, EventArgs e)
+        {
+            pressedHelp = true;
+            this.Invalidate();
+        }
+
+        private void quitToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            Application.Exit();
         }
         #endregion
     }

@@ -294,10 +294,6 @@ namespace Reversi
 
             // Calculate valid locations before start of turn, if there are no valid locations player needs to pass or... 
             if (getValidLocations() == 0)
-        }
-        private void checkValidLocations()
-        {
-
             {
                 state = Status.pass;
                 passCounter++;
@@ -315,6 +311,8 @@ namespace Reversi
                 else
                     state = Status.remise;
             }
+
+            this.Invalidate();
         }
 
         private int calculateScore(int player)
