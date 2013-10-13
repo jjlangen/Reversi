@@ -70,6 +70,15 @@ namespace Reversi
 
         private void paintBoard(Graphics g, int circleSize)
         {
+            for (int i = 0; i < x; i++)
+            {
+                for (int j = 0; j < y; j++)
+                {
+                    if ( (i+(j%2))%2 == 0)
+                        g.FillRectangle(Brushes.White, i * d + d, j * d + d, d, d);
+                }
+            }
+
             for (int i = 0; i <= x; i++)
                 g.DrawLine(Pens.Black, i * d + d, d, i * d + d, y * d + d);
 
