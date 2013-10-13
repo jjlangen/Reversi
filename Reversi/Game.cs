@@ -23,8 +23,8 @@ namespace Reversi
     {
         #region Setup
         // Constants x and y affect rows and colums on the board, d is the field size
-        const int x = 5;
-        const int y = 5;
+        const int x = 6;
+        const int y = 6;
         const int d = 50;
         #endregion
 
@@ -143,9 +143,7 @@ namespace Reversi
         private void processClick(object sender, MouseEventArgs mea)
         {
             if (state == Status.pass)
-            {
                 switchTurns();
-            }
             else
             {
                 int coordX = (int)Math.Floor((double)(mea.X - d) / d);
@@ -176,20 +174,26 @@ namespace Reversi
             return flip(coordX, coordY, opponent, false);
         }
 
-        private int[,] getValidLocations()
+        private int getValidLocations()
         {
+            int numberOfValidLocations = 0;
             int opponent = activePlayer == 1 ? 2 : 1;
+
+            validLocations = new int[x, y];
 
             for (int i = 0; i < x; i++)
             {
                 for (int j = 0; j < y; j++)
                 {
                     if (isValidLocation(i, j, opponent))
+                    {
                         validLocations[i, j] = 1;
+                        numberOfValidLocations++;
+                    }
                 }
             }
 
-            return validLocations;
+            return numberOfValidLocations;
         }
 
         private bool flip(int coordX, int coordY, int opponent, bool flip)
@@ -266,8 +270,7 @@ namespace Reversi
             pressedHelp = false;
             passCounter = 0;
 
-            validLocations = new int[x, y];
-            validLocations = getValidLocations();
+            getValidLocations();
 
             if (firstGame)
                 state = Status.welcome;
@@ -277,6 +280,7 @@ namespace Reversi
 
         private void switchTurns()
         {
+            // Switch between players
             if (activePlayer == 1)
             {
                 activePlayer = 2;
@@ -288,26 +292,18 @@ namespace Reversi
                 state = Status.turnred;
             }
 
-            // >>>>>>>>>>>> Check some things before starting next round <<<<<<<<<<<
-
-            validLocations = new int[x, y];
-            validLocations = getValidLocations();
-
-            int numberOfValidLocations = 0;
-            foreach (int i in validLocations)
-                numberOfValidLocations += i;
-
-            if (numberOfValidLocations == 0)
+            // Calculate valid locations before start of turn, if there are no valid locations player needs to pass or... 
+            if (getValidLocations() == 0)
             {
                 state = Status.pass;
                 passCounter++;
             }
 
+            // .. if both players need to pass directly after eachother or the board is full, calculate winner
             if (passCounter == 2 || calculateScore(0) == 0)
             {
-                int red = calculateScore(1);
-                int blue = calculateScore(2);
-                if (red > blue)
+                int red, blue;
+                if ((red = calculateScore(1)) > (blue = calculateScore(2)))
                     state = Status.winred;
                 else if (red < blue)
                     state = Status.winblue;
