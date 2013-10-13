@@ -200,14 +200,14 @@ namespace Reversi
         {
             // Define possible operations (directions)
             int[][] operations = new int[][] {
-            new int[] {0,-1},    // Up
-            new int[] {1,-1},    // Up Right
-            new int[] {1,0},     // Right
-            new int[] {1,1},     // Down Right
-            new int[] {0,1},     // Down
-            new int[] {-1,1},    // Down left
-            new int[] {-1,0},    // Left
-            new int[] {-1,-1},   // Up Left
+                new int[] {0,-1},    // Up
+                new int[] {1,-1},    // Up Right
+                new int[] {1,0},     // Right
+                new int[] {1,1},     // Down Right
+                new int[] {0,1},     // Down
+                new int[] {-1,1},    // Down left
+                new int[] {-1,0},    // Left
+                new int[] {-1,-1},   // Up Left
             };
 
             // Try all directions for the current location
