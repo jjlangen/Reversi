@@ -121,8 +121,9 @@ namespace Reversi
             g.DrawString(calculateScore(1).ToString(), f, Brushes.White, rect1, sf);
             g.DrawString(calculateScore(2).ToString(), f, Brushes.White, rect2, sf);
 
-            // Paint a yellow circle around active player
-            g.DrawEllipse(new Pen(Brushes.Yellow, 5), activePlayer == 1 ? rect1 : rect2);
+            // Paint a yellow circle around active player when the game is running
+            if (state == Status.winblue || state == Status.winred || state == Status.remise)
+                g.DrawEllipse(new Pen(Brushes.Yellow, 5), activePlayer == 1 ? rect1 : rect2);
         }
 
         private void paintState(Graphics g, StringFormat sf, Font f)
